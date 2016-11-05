@@ -10,7 +10,7 @@ ENV LIBSODIUM_URL https://github.com/jedisct1/libsodium/archive/stable.zip
 
 ENV SSR_HOST 0.0.0.0
 ENV SSR_PORT 8388
-ENV SSR_METHOD aes-256-cfb
+ENV SSR_METHOD rc4
 ENV SSR_PWD mypassword
 ENV SSR_PROTOCOL auth_sha1_v2_compatible
 ENV SSR_OBFS http_simple_compatible
