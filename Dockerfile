@@ -1,29 +1,48 @@
-# ssr-with-net-speeder
+FROM debian:wheezy
+MAINTAINER leevix <leevixdev@163.com>
 
-FROM ubuntu:14.04.3
-MAINTAINER malaohu <tua@live.cn>
+ENV BUILD_ENV build-essential wget unzip
+ENV BUILD_DEP python python-m2crypto
+
+ENV SSR_DIR /usr/local/shadowsocks
+ENV SSR_URL https://github.com/breakwa11/shadowsocks/archive/manyuser.zip
+ENV LIBSODIUM_URL https://github.com/jedisct1/libsodium/archive/stable.zip
+
+ENV SSR_HOST 0.0.0.0
+ENV SSR_PORT 8388
+ENV SSR_METHOD aes-256-cfb
+ENV SSR_PWD mypassword
+ENV SSR_PROTOCOL auth_sha1_v2_compatible
+ENV SSR_OBFS http_simple_compatible
+ENV SSR_TIMEOUT 300
 
 RUN apt-get update && \
-apt-get clean  && \
-apt-get install -y python python-pip python-m2crypto libnet1-dev libpcap0.8-dev git gcc && \
-apt-get clean
+    apt-get -y install ${BUILD_ENV} ${BUILD_DEP} && \
+    cd /tmp && \
+    wget --no-check-certificate ${LIBSODIUM_URL} -O libsodium-src.zip && \
+    unzip libsodium-src.zip && \
+    cd libsodium-stable && \
+    ./configure && make && make install && \
+    echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && \
+    ldconfig && \
+    cd ../ && \
+    wget --no-check-certificate ${SSR_URL} -O shadowsocks-src.zip && \
+    unzip shadowsocks-src.zip && \
+    mv shadowsocks-manyuser/shadowsocks ${SSR_DIR} && \
+    rm -rf shadowsocks* libsodium* && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get -y remove --purge ${BUILD_ENV} && \
+    apt-get -y autoremove
 
-RUN git clone -b manyuser https://github.com/breakwa11/shadowsocks.git ssr
-RUN git clone https://github.com/snooda/net-speeder.git net-speeder
-WORKDIR net-speeder
-RUN sh build.sh
+EXPOSE ${SSR_PORT}
+EXPOSE ${SSR_PORT}/udp
 
-RUN mv net_speeder /usr/local/bin/
-COPY entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/net_speeder
-
-# Start Net Speeder
-#CMD ["nohup /usr/local/bin/net_speeder venet0 \"ip\" >/dev/null 2>&1 &"]
-
-#Test 
-#CMD ["ping www.baidu.com -c 5"]
-
-
-# Configure container to run as an executable
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD python ${SSR_DIR}/server.py -s ${SSR_HOST} \
+                                -p ${SSR_PORT} \
+                                -m ${SSR_METHOD} \
+                                -k ${SSR_PWD} \
+                                -O ${SSR_PROTOCOL} \
+                                -o ${SSR_OBFS} \
+                                -t ${SSR_TIMEOUT} \
+                                --fast-open
+  
