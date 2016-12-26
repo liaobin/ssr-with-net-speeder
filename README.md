@@ -1,8 +1,3 @@
-# ssr-with-net-speeder
+# get ss info auto
 
-Start
-
-```
-docker run -d --name ssr-with-net-speeder -p 8989:8989 malaohu/ssr-with-net-speeder -s 0.0.0.0 -p 8989 -k RUYO.net -m rc4-md5 -o http_simple -O auth_sha1
-
-```
+### fork&optimize from https://github.com/malaohu/ssr-with-net-speeder
